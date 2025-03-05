@@ -193,6 +193,7 @@ def homepage(request: Request) -> HTMLResponse:
                     form.querySelector('button').style.display = 'none';
                 }});
             </script>
+            <link rel="icon" type="image/x-icon" href="/favicon.ico">
         </head>
         <body>
             <h1><a href="/" style="text-decoration: none; color: inherit;">🏄‍♂️ Surf Companion</a></h1>
@@ -338,6 +339,7 @@ def log_form() -> HTMLResponse:
                     padding: 8px;
                 }}
             </style>
+            <link rel="icon" type="image/x-icon" href="/favicon.ico">
         </head>
         <body>
             <h1>🏄‍♂️ Log Surf Session</h1>
