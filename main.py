@@ -23,8 +23,13 @@ modal_image = (
 
 
 @web_app.get("/")
-async def homepage():
-    return client.homepage()
+async def homepage(request: Request):
+    return client.homepage(request)
+
+
+@web_app.get("/log")
+async def log():
+    return client.log_form()
 
 
 @web_app.post("/log_session")
@@ -45,13 +50,12 @@ async def log_session(request: Request):
         session.add(surf_session)
         session.commit()
 
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/?success=Session+added", status_code=303)
 
 
 @app.function(image=modal_image, container_idle_timeout=60, volumes={"/data": volume})
 @modal.asgi_app()
 def surf_companion():
-
     engine = create_engine(sqlite_url, echo=True)
     SQLModel.metadata.create_all(engine)
     stuff.initialize_db()

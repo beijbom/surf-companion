@@ -12,13 +12,15 @@ def initialize_db() -> None:
     epic_surfer = Surfer(name="Oscar", email="oscar.doe@example.com")
 
     spot = Spot(name="Lane")
+    good_spot = Spot(name="Natural Bridges")
     try:
         with Session(engine) as session:
-            session.add_all([bad_surfer, epic_surfer, spot])
-            session.commit()
-    except IntegrityError as e:
-        session.rollback()
-        print("Warning: Some entries were skipped due to duplicates")
+            for item in [bad_surfer, epic_surfer, spot, good_spot]:
+                try:
+                    session.add(item)
+                    session.commit()
+                except IntegrityError as e:
+                    session.rollback()
+                    print(f"Skipping duplicate item: {item}")
     except Exception as e:
-        session.rollback()
         print(f"Error during database initialization: {e}")
