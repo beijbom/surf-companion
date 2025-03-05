@@ -62,7 +62,7 @@ async def favicon():
 
 @app.function(image=modal_image, container_idle_timeout=60, volumes={"/data": volume})
 @modal.asgi_app()
-def surf_companion():
+def index():
     engine = create_engine(sqlite_url, echo=True)
     SQLModel.metadata.create_all(engine)
     stuff.initialize_db()
