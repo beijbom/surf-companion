@@ -1,12 +1,12 @@
 import modal
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlmodel import Session, SQLModel, create_engine
 
 import client
 import stuff
 from config import sqlite_url
-from datamodel import Rating, SurfSession
+from datamodel import Rating, SurfSession, add_latitude_longitude_columns
 
 web_app = FastAPI()
 app = modal.App(name="SurfCompanion")
@@ -25,17 +25,18 @@ modal_image = (
 
 
 @web_app.get("/")
-async def homepage(request: Request):
+async def homepage(request: Request) -> HTMLResponse:
+    add_latitude_longitude_columns()
     return client.homepage(request)
 
 
 @web_app.get("/log")
-async def log():
+async def log() -> HTMLResponse:
     return client.log_form()
 
 
 @web_app.post("/log_session")
-async def log_session(request: Request):
+async def log_session(request: Request) -> RedirectResponse:
     form_data = await request.form()
 
     # Convert form data to appropriate types
@@ -56,15 +57,20 @@ async def log_session(request: Request):
 
 
 @web_app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
+async def favicon() -> FileResponse:
     return FileResponse(favicon_path)
 
 
 @app.function(image=modal_image, container_idle_timeout=60, volumes={"/data": volume})
 @modal.asgi_app()
-def index():
+def index() -> FastAPI:
+    # First run migrations
+    add_latitude_longitude_columns()
+
+    # Then create tables
     engine = create_engine(sqlite_url, echo=True)
     SQLModel.metadata.create_all(engine)
+
     stuff.initialize_db()
 
     return web_app

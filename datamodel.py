@@ -3,8 +3,11 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import EmailStr
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, create_engine, text
+from sqlalchemy.orm import Session
 from sqlmodel import Column, Enum, Field, SQLModel
+
+from config import sqlite_url
 
 
 class Rating(int, enum.Enum):
@@ -25,6 +28,10 @@ class Surfer(SQLModel, table=True):
 class Spot(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    image_path: Optional[str] = None
+    description: Optional[str] = None
 
 
 class SurfSession(SQLModel, table=True):
@@ -35,3 +42,23 @@ class SurfSession(SQLModel, table=True):
     waves: Optional[Rating] = None
     surfer_id: Optional[int] = Field(default=None, foreign_key="surfer.id")
     spot_id: Optional[int] = Field(default=None, foreign_key="spot.id")
+
+
+def add_latitude_longitude_columns() -> None:
+    engine = create_engine(sqlite_url)
+    with Session(engine) as session:
+        for column_def in [
+            ("latitude", "FLOAT"),
+            ("longitude", "FLOAT"),
+            ("image_path", "TEXT"),
+            ("description", "TEXT"),
+        ]:
+            try:
+                session.execute(text(f"ALTER TABLE spot ADD COLUMN {column_def[0]} {column_def[1]}"))
+            except Exception as e:
+                # Column might already exist, skip
+                print(f"Skipping {column_def[0]}: {str(e)}")
+        session.commit()
+
+
+# Add this call before any database operations
